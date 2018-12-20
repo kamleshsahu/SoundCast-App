@@ -1,5 +1,6 @@
 package com.kamlesh.soundcastapp.Adapters;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
@@ -14,10 +15,14 @@ import android.widget.TextView;
 
 
 import com.bumptech.glide.Glide;
+import com.google.gson.Gson;
+import com.kamlesh.soundcastapp.HomeScreen;
 import com.kamlesh.soundcastapp.Model.Apidata;
 import com.kamlesh.soundcastapp.Model.Result;
+import com.kamlesh.soundcastapp.MusicPlayer;
 import com.kamlesh.soundcastapp.R;
 
+import java.io.Serializable;
 import java.util.List;
 
 
@@ -28,9 +33,11 @@ import java.util.List;
 public class AdapterList extends RecyclerView.Adapter<AdapterList.AdapterAllHolder> {
     private Context context;
     private List<Result> data;
-    public AdapterList(Context context,List<Result> data){
+    private Activity activity;
+    public AdapterList(Context context, Activity activity, List<Result> data){
         this.context=context;
         this.data=data;
+        this.activity=activity;
 
     }
 
@@ -60,6 +67,10 @@ public class AdapterList extends RecyclerView.Adapter<AdapterList.AdapterAllHold
            @Override
            public void onClick(View view) {
 
+               Intent intent=new Intent(activity, MusicPlayer.class);
+
+               intent.putExtra("currposition",position);
+               context.startActivity(intent);
            }
        });
 

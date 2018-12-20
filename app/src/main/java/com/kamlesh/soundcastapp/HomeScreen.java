@@ -20,6 +20,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class HomeScreen extends AppCompatActivity {
 
     RecyclerView recyclerView=null;
+    static Apidata apidata=null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,11 +49,12 @@ public class HomeScreen extends AppCompatActivity {
                 @Override
                 public void onResponse(Call call, Response response) {
             //        System.out.println(response.body());
+
                     LinearLayoutManager manager = new LinearLayoutManager(getApplicationContext());
                     recyclerView.setLayoutManager(manager);
                     recyclerView.setHasFixedSize(true);
-                    Apidata data= (Apidata) response.body();
-                    AdapterList adapterList = new AdapterList(getApplicationContext(),data.getResults() );
+                    apidata= (Apidata) response.body();
+                    AdapterList adapterList = new AdapterList(getApplicationContext(),HomeScreen.this,apidata.getResults() );
 
                     recyclerView.setAdapter(adapterList);
                 }
