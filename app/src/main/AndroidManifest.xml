@@ -21,7 +21,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MusicPlayer"></activity>
+        <activity android:name=".MusicPlayer" />
+        <activity android:name=".AddMusic"></activity>
+        <activity android:name=".ChooserActivity"></activity>
+        <activity android:name=".StillImageActivity"></activity>
     </application>
 
 </manifest>

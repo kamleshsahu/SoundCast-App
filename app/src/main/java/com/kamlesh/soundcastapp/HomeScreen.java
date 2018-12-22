@@ -1,9 +1,11 @@
 package com.kamlesh.soundcastapp;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
 
 import com.kamlesh.soundcastapp.Adapters.AdapterList;
 import com.kamlesh.soundcastapp.Model.Apidata;
@@ -27,6 +29,13 @@ public class HomeScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_homescreen);
         recyclerView=findViewById(R.id.songList);
+
+        (findViewById(R.id.addmusic)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(HomeScreen.this,AddMusic.class));
+            }
+        });
 
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .readTimeout(120, TimeUnit.SECONDS)

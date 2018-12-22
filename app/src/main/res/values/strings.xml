@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SoundCast App</string>
+    <string name="desc_still_image_activity">Vision detectors demo with a still image</string>
 </resources>
