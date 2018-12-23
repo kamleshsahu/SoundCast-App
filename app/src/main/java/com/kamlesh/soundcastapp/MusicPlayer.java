@@ -200,7 +200,8 @@ public class MusicPlayer extends AppCompatActivity {
 
         File file=new File(uri.getPath());
         System.out.println(file.exists());
-        mediaPlayer=new MediaPlayer();
+        if(mediaPlayer.isPlaying())mediaPlayer.stop();
+        play.setText("PLAY");
         if(!file.exists()){
             play.setEnabled(false);
             download.setText("Download");

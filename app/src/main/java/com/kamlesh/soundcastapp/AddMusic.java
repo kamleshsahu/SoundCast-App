@@ -1,5 +1,8 @@
 package com.kamlesh.soundcastapp;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -15,14 +18,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
-import com.kamlesh.soundcastapp.Model.UploadModel.Thumbnail_file;
-import com.kamlesh.soundcastapp.Model.UploadModel.Music_file;
-import com.kamlesh.soundcastapp.Model.UploadModel.Song;
 
 
 import java.io.BufferedReader;
@@ -76,11 +77,15 @@ public class AddMusic extends AppCompatActivity{
     private String songdatastring=null;
     private EditText TrackTitle=null;
 
+    static ProgressDialog progress;
+
+    static android.app.AlertDialog.Builder bld;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_music);
-
+        progress=new ProgressDialog(this);
+        bld = new AlertDialog.Builder(this);
 
 
         if (!allPermissionsGranted()) {
@@ -319,22 +324,51 @@ public class AddMusic extends AppCompatActivity{
     }
 
 
+    static void displayAlert(String title, String msg){
+
+        bld.setMessage(msg);
+        bld.setNeutralButton("OK", null);
+        bld.setTitle(title);
+        Log.d("TAG", "Showing alert dialog: " + msg);
+        Dialog dialog=bld.create();
+        //   dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+        dialog.show();
+    };
+
+
     class UploadTask extends AsyncTask<Object ,Object,String>{
 
         @Override
         protected void onPostExecute(String o) {
+            progress.dismiss();
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             try{
                com.kamlesh.soundcastapp.Model.UploadModel.Response resp= new Gson().fromJson(o, com.kamlesh.soundcastapp.Model.UploadModel.Response.class);
 
                if(resp!=null && resp.getObjectId()!=null){
-
-               }else if(resp.getError()!=null){
-                   System.out.println("error ");
+                      displayAlert("Upload Success","object id :"+resp.getObjectId());
+               }else if(resp!=null && resp.getError()!=null){
+                   displayAlert("Upload Error","Error :"+resp.getError());
+               }else{
+                   displayAlert("Upload Error","Error : null response form server");
                }
 
             }catch (Exception e){
                 e.printStackTrace();
+                displayAlert("Unknown Error","Error : unknown error while uploading the song");
             }
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progress.setTitle("Uploading Song...");
+            progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setIndeterminate(true);
+            progress.getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            progress.show();
         }
 
         @Override
@@ -347,7 +381,7 @@ public class AddMusic extends AppCompatActivity{
         @Override
         protected String doInBackground(Object... objects) {
             OkHttpClient client = new OkHttpClient();
-
+            String resp = null;
             MediaType mediaType = MediaType.parse("application/json");
             RequestBody body = RequestBody.create(mediaType, " { \"title\": \""+ TrackTitle.getText() +"\",\n            \"link\": \"abcde\",\n            \"thumbnail\": \"abcdedsafg\",\n            \"music_file\": {\n                \"__type\": \"File\",\n                \"name\": \"1f089358a107d867edc88526baf7e5ac_fast-and-furious.mp3\",\n               \"url\":\"abl\"\n            },\n            \"thumbnail_file\": {\n                \"__type\": \"File\",\n                \"name\": \"eb3dde0688004d4414d5c61cf808e5e4_fast-and-furious.jpg\",\n                 \"url\":\"abl\"\n            }\n }");
             Request request = new Request.Builder()
@@ -359,17 +393,19 @@ public class AddMusic extends AppCompatActivity{
                     .addHeader("cache-control", "no-cache")
                     .addHeader("postman-token", "cf07c74b-5917-6161-897d-2884bf9ad99a")
                     .build();
-
+            okhttp3.Response response = null;
             try {
-                okhttp3.Response response = client.newCall(request).execute();
-                System.out.println(new Gson().toJson(response.body().string()));
-                return response.body().string();
+
+                response = client.newCall(request).execute();
+              //  System.out.println(new Gson().toJson(response.body().string()));
+                resp= response.body().string();
             }catch (Exception e){
                 e.printStackTrace();
-                System.out.println(e.toString());
-                Toast.makeText(getApplicationContext(),"error",Toast.LENGTH_LONG).show();
+                
+            }finally {
+                response.body().close();
             }
-            return null;
+            return resp;
         }
     }
 
