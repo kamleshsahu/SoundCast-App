@@ -7,22 +7,16 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 
 import com.bumptech.glide.Glide;
-import com.google.gson.Gson;
-import com.kamlesh.soundcastapp.HomeScreen;
-import com.kamlesh.soundcastapp.Model.Apidata;
-import com.kamlesh.soundcastapp.Model.Result;
+import com.kamlesh.soundcastapp.Model.DownloadModel.Result;
 import com.kamlesh.soundcastapp.MusicPlayer;
 import com.kamlesh.soundcastapp.R;
 
-import java.io.Serializable;
 import java.util.List;
 
 
@@ -56,7 +50,7 @@ public class AdapterList extends RecyclerView.Adapter<AdapterList.AdapterAllHold
 
        try {
            Glide.with(context)
-                   .load(data.get(position).getThumbnail())
+                   .load(data.get(position).getThumbnail_file().getUrl())
                    //   .override(100, 200) // resizes the image to 100x200 pixels but does not respect aspect ratio
                    .into(holder.icon);
        }catch (Exception e){

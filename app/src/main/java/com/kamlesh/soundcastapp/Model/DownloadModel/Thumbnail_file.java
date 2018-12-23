@@ -1,10 +1,10 @@
 
-package com.kamlesh.soundcastapp.Model;
+package com.kamlesh.soundcastapp.Model.DownloadModel;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Music_file {
+public class Thumbnail_file {
 
     @SerializedName("__type")
     @Expose

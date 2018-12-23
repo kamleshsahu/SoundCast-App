@@ -1,10 +1,12 @@
 package com.kamlesh.soundcastapp;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.DownloadManager;
 import android.app.NotificationManager;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -14,14 +16,13 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -29,20 +30,9 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
-import com.kamlesh.soundcastapp.Adapters.AdapterList;
-import com.kamlesh.soundcastapp.Model.Apidata;
-import com.kamlesh.soundcastapp.Model.Result;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
-
-import okhttp3.OkHttpClient;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.kamlesh.soundcastapp.HomeScreen.apidata;
 
@@ -54,6 +44,9 @@ public class MusicPlayer extends AppCompatActivity {
     private Uri Download_Uri;
     MediaPlayer mediaPlayer= new MediaPlayer();
     ArrayList<Long> list = new ArrayList<>();
+    static ProgressDialog progress;
+
+    static android.app.AlertDialog.Builder bld;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,7 +55,8 @@ public class MusicPlayer extends AppCompatActivity {
          play=findViewById(R.id.play);
          next=findViewById(R.id.next);
          download=findViewById(R.id.download);
-
+        progress=new ProgressDialog(this);
+        bld = new AlertDialog.Builder(this);
         downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
 
         registerReceiver(onComplete,
@@ -71,7 +65,7 @@ public class MusicPlayer extends AppCompatActivity {
 
         currposs = getIntent().getIntExtra("currposition",0);
 
-        System.out.printf("Song details : %s ",new Gson().toJson(apidata.getResults().get(currposs)));
+  //      System.out.printf("Song details : %s ",new Gson().toJson(apidata.getResults().get(currposs)));
         updateUI();
 
         if(!isStoragePermissionGranted())
@@ -95,13 +89,14 @@ public class MusicPlayer extends AppCompatActivity {
               // getExternalFilesDir("SoundCast/"  + apidata.getResults().get(currposs).getMusic_file().getName());
 
                 if (!mediaPlayer.isPlaying()) {
-
+                           mediaPlayer=new MediaPlayer();
+                    play.setText("Pause");
                 //    Uri uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
             //     Uri uri = Uri.parse(new File( "/SoundCast/"  + apidata.getResults().get(currposs).getMusic_file().getName()));
-                    Uri uri = Uri.fromFile(new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/SoundCast/"+apidata.getResults().get(currposs).getMusic_file().getName()));
+                    Uri uri = Uri.fromFile(new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/SoundCast/"+apidata.getResults().get(currposs).getObjectId()+".mp3"));
 
-                    //mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                    System.out.println("\n\nhere is url : "+uri);
+                    mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
                     try {
                         mediaPlayer.setDataSource(getApplicationContext(), uri);
                         mediaPlayer.prepare();
@@ -119,27 +114,30 @@ public class MusicPlayer extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }
-                else {
-                    mediaPlayer.reset();
+                else  if(mediaPlayer.isPlaying()){
+                    mediaPlayer.pause();
+                    play.setText("play");
 
-                //    Uri muri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, apidata.getResults().get(currposs).getMusic_file().getName());
-                    Uri muri = Uri.fromFile(new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/SoundCast/"+apidata.getResults().get(currposs).getMusic_file().getName()));
+//                    mediaPlayer.reset();
+//
+//                //    Uri muri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, apidata.getResults().get(currposs).getMusic_file().getName());
+//                    Uri muri = Uri.fromFile(new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/SoundCast/"+apidata.getResults().get(currposs).getObjectId()+".mp3"));
+//
+//                      mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//                    try {
+//                        mediaPlayer.setDataSource(getApplicationContext(), muri);
+//                        mediaPlayer.prepare();
+//                        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+//                            @Override
+//                            public void onPrepared(MediaPlayer mp) {
+//                                mediaPlayer.start();
+//                            }
+//                        });
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
 
-                      mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                    try {
-                        mediaPlayer.setDataSource(getApplicationContext(), muri);
-                        mediaPlayer.prepare();
-                        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                            @Override
-                            public void onPrepared(MediaPlayer mp) {
-                                mediaPlayer.start();
-                            }
-                        });
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                }
+                };
 
             }
         });
@@ -148,6 +146,13 @@ public class MusicPlayer extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
+                progress.setTitle("Downloading Song...");
+                progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                progress.setIndeterminate(true);
+                progress.getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                progress.show();
 
                 list.clear();
                 Download_Uri = Uri.parse(apidata.getResults().get(currposs).getMusic_file().getUrl());
@@ -157,7 +162,7 @@ public class MusicPlayer extends AppCompatActivity {
                 request.setTitle(apidata.getResults().get(currposs).getTitle());
                 request.setDescription(apidata.getResults().get(currposs).getObjectId());
                 request.setVisibleInDownloadsUi(true);
-                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "/SoundCast/"  + apidata.getResults().get(currposs).getMusic_file().getName());
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "/SoundCast/"  + apidata.getResults().get(currposs).getObjectId()+".mp3");
 
 
                 refid = downloadManager.enqueue(request);
@@ -182,15 +187,21 @@ public class MusicPlayer extends AppCompatActivity {
     }
 
     void updateUI(){
-        Glide.with(MusicPlayer.this)
-                .load(apidata.getResults().get(currposs).getThumbnail())
-                //     .override(200,200) // resizes the image to 100x200 pixels but does not respect aspect ratio
-                .into((ImageView) findViewById(R.id.thumbnail));
-        ((TextView)findViewById(R.id.title)).setText(apidata.getResults().get(currposs).getTitle());
+        try {
+            Glide.with(MusicPlayer.this)
+                    .load(apidata.getResults().get(currposs).getThumbnail_file().getUrl())
+                    //     .override(200,200) // resizes the image to 100x200 pixels but does not respect aspect ratio
+                    .into((ImageView) findViewById(R.id.thumbnail));
+            ((TextView) findViewById(R.id.title)).setText(apidata.getResults().get(currposs).getTitle());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        Uri uri = Uri.fromFile(new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/SoundCast/"+apidata.getResults().get(currposs).getObjectId()+".mp3"));
 
-        Uri uri = Uri.fromFile(new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/SoundCast/"+apidata.getResults().get(currposs).getMusic_file().getName()));
-
-        if(uri==null){
+        File file=new File(uri.getPath());
+        System.out.println(file.exists());
+        mediaPlayer=new MediaPlayer();
+        if(!file.exists()){
             play.setEnabled(false);
             download.setText("Download");
             download.setEnabled(true);
@@ -225,16 +236,14 @@ public class MusicPlayer extends AppCompatActivity {
 
         public void onReceive(Context ctxt, Intent intent) {
 
-
-
-
             long referenceId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-
 
             Log.e("IN", "" + referenceId);
 
             list.remove(referenceId);
-
+            progress.dismiss();
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            updateUI();
 
             if (list.isEmpty())
             {
@@ -244,7 +253,7 @@ public class MusicPlayer extends AppCompatActivity {
                 NotificationCompat.Builder mBuilder =
                         new NotificationCompat.Builder(MusicPlayer.this)
                                 .setSmallIcon(R.mipmap.ic_launcher)
-                                .setContentTitle("GadgetSaint")
+                                .setContentTitle("Song")
                                 .setContentText("All Download completed");
 
 
@@ -258,7 +267,16 @@ public class MusicPlayer extends AppCompatActivity {
     };
 
 
+    static void displayAlert(String title, String msg){
 
+        bld.setMessage(msg);
+        bld.setNeutralButton("OK", null);
+        bld.setTitle(title);
+        Log.d("TAG", "Showing alert dialog: " + msg);
+        Dialog dialog=bld.create();
+        //   dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+        dialog.show();
+    };
 
     @Override
     protected void onDestroy() {
@@ -267,8 +285,6 @@ public class MusicPlayer extends AppCompatActivity {
         super.onDestroy();
 
         unregisterReceiver(onComplete);
-
-
 
     }
 

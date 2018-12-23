@@ -6,9 +6,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.Environment;
+import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -16,18 +15,34 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
+
+import com.google.gson.Gson;
+import com.kamlesh.soundcastapp.Model.UploadModel.Thumbnail_file;
+import com.kamlesh.soundcastapp.Model.UploadModel.Music_file;
+import com.kamlesh.soundcastapp.Model.UploadModel.Song;
+
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Interceptor;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class AddMusic extends AppCompatActivity{
 
@@ -57,6 +72,9 @@ public class AddMusic extends AppCompatActivity{
     private Integer imageMaxWidth;
     // Max height (portrait mode)
     private Integer imageMaxHeight;
+    private String thumbnaildata=null;
+    private String songdatastring=null;
+    private EditText TrackTitle=null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +87,7 @@ public class AddMusic extends AppCompatActivity{
             getRuntimePermissions();
         }
 
+        TrackTitle=findViewById(R.id.songTitle);
 
        findViewById(R.id.addthumbnail).setOnClickListener(new View.OnClickListener() {
            @Override
@@ -90,7 +109,16 @@ public class AddMusic extends AppCompatActivity{
             Log.d(TAG, "Preview is null");
         }
 
-
+        findViewById(R.id.upload).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(thumbnaildata!=null && songdatastring!=null && !TrackTitle.getText().toString().equals("")){
+                        new UploadTask().execute();
+                }else{
+                    Toast.makeText(getApplicationContext(),"please fill data",Toast.LENGTH_LONG).show();
+                }
+            }
+        });
 
         isLandScape =
                 (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
@@ -248,25 +276,27 @@ public class AddMusic extends AppCompatActivity{
                     songdata.append(line);
                 }
 
+                songdatastring=songdata.toString();
+
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            //      tryReloadAndDetectInImage();
+
         } else if (requestCode == REQUEST_CHOOSE_IMAGE && resultCode == RESULT_OK) {
             // In this case, imageUri is returned by the chooser, save it.
             imageUri = data.getData();
 
             try {
                 BufferedReader br=new BufferedReader(new InputStreamReader(getContentResolver().openInputStream(data.getData())));
-                StringBuilder thumbnaildata=new StringBuilder();
+                StringBuilder thumbnailtemp=new StringBuilder();
                 String line="";
                 while ((line=br.readLine())!=null){
                     //System.out.println(data1);
-                    thumbnaildata.append(line);
+                    thumbnailtemp.append(line);
                 }
-
+            thumbnaildata=thumbnailtemp.toString();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -275,6 +305,73 @@ public class AddMusic extends AppCompatActivity{
 
             tryReloadAndDetectInImage();
         }
+        updateUI();
     }
+
+    void updateUI(){
+        if(songdatastring!=null){
+            findViewById(R.id.SelectSong).setBackgroundColor(getResources().getColor(R.color.added));
+        }
+        if(thumbnaildata!=null){
+            findViewById(R.id.addthumbnail).setBackgroundColor(getResources().getColor(R.color.added));
+        }
+
+    }
+
+
+    class UploadTask extends AsyncTask<Object ,Object,String>{
+
+        @Override
+        protected void onPostExecute(String o) {
+            try{
+               com.kamlesh.soundcastapp.Model.UploadModel.Response resp= new Gson().fromJson(o, com.kamlesh.soundcastapp.Model.UploadModel.Response.class);
+
+               if(resp!=null && resp.getObjectId()!=null){
+
+               }else if(resp.getError()!=null){
+                   System.out.println("error ");
+               }
+
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            super.onCancelled();
+        }
+
+
+
+        @Override
+        protected String doInBackground(Object... objects) {
+            OkHttpClient client = new OkHttpClient();
+
+            MediaType mediaType = MediaType.parse("application/json");
+            RequestBody body = RequestBody.create(mediaType, " { \"title\": \""+ TrackTitle.getText() +"\",\n            \"link\": \"abcde\",\n            \"thumbnail\": \"abcdedsafg\",\n            \"music_file\": {\n                \"__type\": \"File\",\n                \"name\": \"1f089358a107d867edc88526baf7e5ac_fast-and-furious.mp3\",\n               \"url\":\"abl\"\n            },\n            \"thumbnail_file\": {\n                \"__type\": \"File\",\n                \"name\": \"eb3dde0688004d4414d5c61cf808e5e4_fast-and-furious.jpg\",\n                 \"url\":\"abl\"\n            }\n }");
+            Request request = new Request.Builder()
+                    .url("https://soundcast.back4app.io/classes/songs_library")
+                    .post(body)
+                    .addHeader("x-parse-application-id", "VSPdpDKRMND382hqIRFIaiVLgbkhM0E1rL32l1SQ")
+                    .addHeader("x-parse-rest-api-key", "E4ZeObhQv3XoHaQ3Q6baHGgbDPOkuO9jPlY9gzgA")
+                    .addHeader("content-type", "application/json")
+                    .addHeader("cache-control", "no-cache")
+                    .addHeader("postman-token", "cf07c74b-5917-6161-897d-2884bf9ad99a")
+                    .build();
+
+            try {
+                okhttp3.Response response = client.newCall(request).execute();
+                System.out.println(new Gson().toJson(response.body().string()));
+                return response.body().string();
+            }catch (Exception e){
+                e.printStackTrace();
+                System.out.println(e.toString());
+                Toast.makeText(getApplicationContext(),"error",Toast.LENGTH_LONG).show();
+            }
+            return null;
+        }
+    }
+
 
 }

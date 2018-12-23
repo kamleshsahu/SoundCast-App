@@ -8,7 +8,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 import com.kamlesh.soundcastapp.Adapters.AdapterList;
-import com.kamlesh.soundcastapp.Model.Apidata;
+import com.kamlesh.soundcastapp.Model.DownloadModel.Apidata;
 
 import java.util.concurrent.TimeUnit;
 

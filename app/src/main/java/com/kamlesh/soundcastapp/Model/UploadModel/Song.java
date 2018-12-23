@@ -1,20 +1,11 @@
 
-package com.kamlesh.soundcastapp.Model;
+package com.kamlesh.soundcastapp.Model.UploadModel;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Result {
+public class Song {
 
-    @SerializedName("objectId")
-    @Expose
-    private String objectId;
-    @SerializedName("createdAt")
-    @Expose
-    private String createdAt;
-    @SerializedName("updatedAt")
-    @Expose
-    private String updatedAt;
     @SerializedName("title")
     @Expose
     private String title;
@@ -30,33 +21,6 @@ public class Result {
     @SerializedName("thumbnail_file")
     @Expose
     private Thumbnail_file thumbnail_file;
-    @SerializedName("ACL")
-    @Expose
-    private ACL aCL;
-
-    public String getObjectId() {
-        return objectId;
-    }
-
-    public void setObjectId(String objectId) {
-        this.objectId = objectId;
-    }
-
-    public String getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public String getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(String updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 
     public String getTitle() {
         return title;
@@ -96,14 +60,6 @@ public class Result {
 
     public void setThumbnail_file(Thumbnail_file thumbnail_file) {
         this.thumbnail_file = thumbnail_file;
-    }
-
-    public ACL getACL() {
-        return aCL;
-    }
-
-    public void setACL(ACL aCL) {
-        this.aCL = aCL;
     }
 
 }
